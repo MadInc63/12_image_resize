@@ -23,7 +23,8 @@ def arg_parser():
     return parser.parse_args()
 
 
-def calculate_apect_ratio(width, height, new_width, new_height):
+def calculate_apect_ratio(original_image, new_width, new_height):
+    width, height = original_image.size
     if new_width is None:
         new_width = width / (height / new_height)
     elif new_height is None:
@@ -31,11 +32,13 @@ def calculate_apect_ratio(width, height, new_width, new_height):
     return new_width, new_height
 
 
-def calculate_after_scaling(width, height, scale):
+def calculate_after_scaling(original_image, scale):
+    width, height = original_image.size
     return (width * (scale / 100)), (height * (scale / 100))
 
 
-def scale_validation(width, height, width_scale, height_scale):
+def scale_validation(original_image, width_scale, height_scale):
+    width, height = original_image.size
     if int((width/height)*100) != int((width_scale / height_scale)*100):
         return True
     else:
@@ -44,6 +47,7 @@ def scale_validation(width, height, width_scale, height_scale):
 
 def file_name_for_save_image(path_to_original, path_to_resized,
                              width, height):
+    print(width, height)
     path_to_original = os.path.basename(path_to_original)
     if path_to_resized is None:
         path_to_resized = os.path.splitext(path_to_original)[0] + '__' + str(
@@ -64,45 +68,35 @@ def resize_image(width, height, image, path_to_save_image):
 
 if __name__ == '__main__':
     arg = arg_parser()
-    path_to_open = arg.input
     path_to_save = arg.output
     resize_width = arg.width
     resize_height = arg.height
-    resize_scale = arg.scale
-    opened_image = Image.open(path_to_open)
-    image_width, image_height = opened_image.size
-    if resize_scale is None:
-        if resize_width is None and resize_height is None:
-            print('There is no argument to change image')
-        else:
-            if resize_width is not None and resize_height is not None:
-                if scale_validation(image_width, image_height,
-                                    resize_width, resize_height):
-                    print('Not proportional scaling for the '
-                          'specified width and height')
-            resize_width, resize_height = calculate_apect_ratio(image_width,
-                                                                image_height,
-                                                                resize_width,
-                                                                resize_height)
-            path_to_save = file_name_for_save_image(path_to_open,
-                                                    path_to_save,
-                                                    resize_width,
-                                                    resize_height)
-            resize_image(resize_width, resize_height,
-                         opened_image, path_to_save)
+    opened_image = Image.open(arg.input)
+    if arg.scale is None:
+        if arg.width is None and arg.height is None:
+            raise RuntimeError('There is no argument to change image')
+        elif arg.width is not None and arg.height is not None:
+            if scale_validation(opened_image,
+                                arg.width,
+                                arg.height):
+                print('Not proportional scaling for the '
+                      'specified width and height')
+        elif arg.width is not None or arg.height is not None:
+            resize_width, resize_height = calculate_apect_ratio(opened_image,
+                                                                arg.width,
+                                                                arg.height)
     else:
-        if resize_width is None and resize_height is None:
-            resize_width, resize_height = calculate_after_scaling(image_width,
-                                                                  image_height,
-                                                                  resize_scale)
-            path_to_save = file_name_for_save_image(path_to_open,
-                                                    path_to_save,
-                                                    resize_width,
-                                                    resize_height)
-            resize_image(resize_width,
-                         resize_height,
-                         opened_image,
-                         path_to_save)
-        else:
-            print('Use only the scale argument or the '
-                  'width / height change argument')
+        if arg.width is not None or resize_height is not None:
+            raise RuntimeError('Use only the scale argument or the '
+                               'width / height change argument')
+        elif arg.width is None and resize_height is None:
+            resize_width, resize_height = calculate_after_scaling(opened_image,
+                                                                  arg.scale)
+    path_to_save = file_name_for_save_image(arg.input,
+                                            arg.output,
+                                            resize_width,
+                                            resize_height)
+    resize_image(resize_width,
+                 resize_height,
+                 opened_image,
+                 path_to_save)
