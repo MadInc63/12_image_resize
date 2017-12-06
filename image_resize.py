@@ -69,23 +69,20 @@ def save_image(image_for_save, path_to_result):
 
 
 if __name__ == '__main__':
-    new_size = [0, 0]
     arg = arg_parser()
-    path_to_save = arg.output
     opened_image = Image.open(arg.input)
-    if arg.scale is None:
-        if arg.width is None and arg.height is None:
+    if arg.scale and (arg.width or arg.height):
+        raise RuntimeError('Use only the scale argument or the '
+                           'width / height change argument')
+    elif not arg.scale and not arg.width and not arg.height:
             raise RuntimeError('There is no argument to change image')
-        elif arg.width or arg.height:
-            new_size = calculate_aspect_ratio(opened_image,
-                                              arg.width,
-                                              arg.height)
+    elif arg.scale:
+            new_size = calculate_after_scaling(opened_image,
+                                               arg.scale)
     else:
-        if arg.width or arg.height:
-            raise RuntimeError('Use only the scale argument or the '
-                               'width / height change argument')
-        elif arg.width is None and arg.height is None:
-            new_size = calculate_after_scaling(opened_image, arg.scale)
+        new_size = calculate_aspect_ratio(opened_image,
+                                          arg.width,
+                                          arg.height)
     resized_image = resize_image(opened_image, new_size)
     file_name_for_save = file_name_for_save_image(arg.input,
                                                   arg.output,
