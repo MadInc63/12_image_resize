@@ -3,23 +3,33 @@ import os
 from PIL import Image
 
 
-def arg_parser():
+def arg_parse():
     parser = argparse.ArgumentParser(description='Resize image')
-    parser.add_argument('input',
-                        type=str,
-                        help='path to open original image file')
-    parser.add_argument('-output',
-                        type=str,
-                        help='path to save resized image file')
-    parser.add_argument('-width',
-                        type=int,
-                        help='width image in pixel')
-    parser.add_argument('-height',
-                        type=int,
-                        help='height image in pixel')
-    parser.add_argument('-scale',
-                        type=int,
-                        help='scale image in percent')
+    parser.add_argument(
+        'input',
+        type=str,
+        help='path to open original image file'
+    )
+    parser.add_argument(
+        '-output',
+        type=str,
+        help='path to save resized image file'
+    )
+    parser.add_argument(
+        '-width',
+        type=int,
+        help='width image in pixel'
+    )
+    parser.add_argument(
+        '-height',
+        type=int,
+        help='height image in pixel'
+    )
+    parser.add_argument(
+        '-scale',
+        type=int,
+        help='scale image in percent'
+    )
     return parser.parse_args()
 
 
@@ -27,8 +37,9 @@ def calculate_aspect_ratio(original_image, new_width, new_height):
     width, height = original_image.size
     if new_height and new_width:
         if int((width/height)*100) != int((new_width/new_height)*100):
-            print('Not proportional scaling for the '
-                  'specified width and height')
+            print(
+                'Not proportional scaling for the specified width and height'
+            )
         return new_width, new_height
     elif new_width is None:
         return int(width/(height/new_height)), new_height
@@ -69,22 +80,25 @@ def save_image(image_for_save, path_to_result):
 
 
 if __name__ == '__main__':
-    arg = arg_parser()
-    opened_image = Image.open(arg.input)
-    if arg.scale and (arg.width or arg.height):
-        raise RuntimeError('Use only the scale argument or the '
-                           'width / height change argument')
-    elif not arg.scale and not arg.width and not arg.height:
-            raise RuntimeError('There is no argument to change image')
-    elif arg.scale:
+    args = arg_parse()
+    opened_image = Image.open(args.input)
+    if args.scale and (args.width or args.height):
+        raise RuntimeError(
+            'Use only the scale argument or the width/height change argument'
+        )
+    elif not args.scale and not args.width and not args.height:
+            raise RuntimeError(
+                'There is no argument to change image'
+            )
+    elif args.scale:
             new_size = calculate_after_scaling(opened_image,
-                                               arg.scale)
+                                               args.scale)
     else:
         new_size = calculate_aspect_ratio(opened_image,
-                                          arg.width,
-                                          arg.height)
+                                          args.width,
+                                          args.height)
     resized_image = resize_image(opened_image, new_size)
-    file_name_for_save = file_name_for_save_image(arg.input,
-                                                  arg.output,
+    file_name_for_save = file_name_for_save_image(args.input,
+                                                  args.output,
                                                   resized_image)
     save_image(resized_image, file_name_for_save)
