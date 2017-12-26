@@ -57,8 +57,7 @@ def generates_file_name_for_save(
         image_for_save
 ):
     if path_to_resized:
-        file_name = os.path.splitext(path_to_resized)[0]
-        file_extension = os.path.splitext(path_to_original)[1]
+        file_name, file_extension = os.path.splitext(path_to_resized)
         path_to_resized = '{}__{}x{}{}'.format(
             file_name,
             *image_for_save.size,
@@ -81,6 +80,7 @@ if __name__ == '__main__':
     accuracy = 100
     args = parse_args()
     opened_image = Image.open(args.input)
+    width_original, height_original = opened_image.size
     if args.scale and (args.width or args.height):
         raise RuntimeError(
             'Use only the scale argument or the width/height change argument'
@@ -100,8 +100,9 @@ if __name__ == '__main__':
             args.width,
             args.height
         )
-        aspect_ratio = (opened_image.size[0] / opened_image.size[1])
-        aspect_ratio_new = (new_size[0] / new_size[1])
+        aspect_ratio = (width_original / height_original)
+        width_resized, height_resized = new_size
+        aspect_ratio_new = (width_resized / height_resized)
         if int(aspect_ratio * accuracy) != int(aspect_ratio_new * accuracy):
             print(
                 'Not proportional scaling for the specified width and height'
