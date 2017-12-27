@@ -33,8 +33,8 @@ def parse_args():
     return parser.parse_args()
 
 
-def calculate_aspect_ratio(original_image, new_width, new_height):
-    width, height = original_image.size
+def calculate_aspect_ratio(image, new_width, new_height):
+    width, height = image.size
     if new_height and new_width:
         return new_width, new_height
     elif new_width is None:
@@ -47,29 +47,28 @@ def scaling_image(image, percent):
     return [int((size * percent/100)) for size in image.size]
 
 
-def resize_image(original_image, new_image_size):
-    return original_image.resize(new_image_size, Image.ANTIALIAS)
+def resize_image(image, size):
+    return image.resize(size, Image.ANTIALIAS)
 
 
-def generates_file_name_for_save(
+def build_file_name(path, image):
+    file_name, file_extension = os.path.splitext(path)
+    generated_name = '{}__{}x{}{}'.format(
+        file_name,
+        *image.size,
+        file_extension)
+    return generated_name
+
+
+def get_file_name_for_save(
         path_to_original,
         path_to_resized,
-        image_for_save
+        image
 ):
     if path_to_resized:
-        file_name, file_extension = os.path.splitext(path_to_resized)
-        path_to_resized = '{}__{}x{}{}'.format(
-            file_name,
-            *image_for_save.size,
-            file_extension)
-        return path_to_resized
+        return build_file_name(path_to_resized, image)
     else:
-        file_name, file_extension = os.path.splitext(path_to_original)
-        created_path = '{}__{}x{}{}'.format(
-            file_name,
-            *image_for_save.size,
-            file_extension)
-        return created_path
+        return build_file_name(path_to_original, image)
 
 
 def save_image(image_for_save, path_to_result):
@@ -108,7 +107,7 @@ if __name__ == '__main__':
                 'Not proportional scaling for the specified width and height'
             )
     resized_image = resize_image(opened_image, new_size)
-    file_name_for_save = generates_file_name_for_save(
+    file_name_for_save = get_file_name_for_save(
         args.input,
         args.output,
         resized_image
